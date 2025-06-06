@@ -104,4 +104,4 @@ class ConstellationPlugin(Star):
                 yield event.plain_result("暂不支持该星座查询，请输入正确的星座名称如'白羊座'")
 
             # 中断事件处理流程
-            event.action = EventAction.BREAK_PASS
+            event.stop_event()  # 停止事件传播，防止其他插件处理相同消息
