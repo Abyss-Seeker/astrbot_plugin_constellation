@@ -1,6 +1,5 @@
 import re
 import aiohttp
-import asyncio
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
@@ -38,22 +37,19 @@ class ConstellationPlugin(Star):
         return horoscope_match
 
     async def constellation_request(self, zodiac_english):
-        """星座请求函数"""
+        """星座请求函数（完整展示所有信息）"""
         try:
-            # 设置请求参数
             params = {"type": zodiac_english, "time": "today"}
 
             async with self.session.get(self.CONSTELLATION_URL, params=params) as response:
                 if response.status != 200:
-                    err_str = f"API请求失败: HTTP {response.status}"
-                    logger.error(err_str)
-                    return err_str
+                    return f"API请求失败: HTTP {response.status}"
 
                 response_data = await response.json()
 
                 if response_data.get("success"):
-                    # 解析并格式化运势数据
                     data = response_data['data']
+                    # 构建完整的星座运势信息（包含所有字段）
                     constellation_text = (
                         f"✨ {data['title']}今日运势 ✨\n"
                         f"📅 日期：{data['time']}\n\n"
@@ -61,40 +57,39 @@ class ConstellationPlugin(Star):
                         f"宜：{data['todo']['yi']}\n"
                         f"忌：{data['todo']['ji']}\n\n"
                         f"📊【运势指数】\n"
-                        f"总运势：{data['index']['all']}\n"
-                        f"爱情：{data['index']['love']}\n"
-                        f"工作：{data['index']['work']}\n"
-                        f"财运：{data['index']['money']}\n"
-                        f"健康：{data['index']['health']}\n\n"
+                        f"总运势：{data['index']['all']} (评分: {data['fortune']['all']}/5)\n"
+                        f"爱情：{data['index']['love']} (评分: {data['fortune']['love']}/5)\n"
+                        f"工作：{data['index']['work']} (评分: {data['fortune']['work']}/5)\n"
+                        f"财运：{data['index']['money']} (评分: {data['fortune']['money']}/5)\n"
+                        f"健康：{data['index']['health']} (评分: {data['fortune']['health']}/5)\n\n"
                         f"🍀【幸运提示】\n"
                         f"数字：{data['luckynumber']}\n"
                         f"颜色：{data['luckycolor']}\n"
                         f"星座：{data['luckyconstellation']}\n\n"
-                        f"🔔【简评】\n{data['shortcomment']}"
+                        f"🔔【简评】\n{data['shortcomment']}\n\n"
+                        f"🌟【详细运势解读】\n"
+                        f"💫 整体运势：\n{data['fortunetext']['all']}\n\n"
+                        f"❤️ 爱情运势：\n{data['fortunetext']['love']}\n\n"
+                        f"💼 工作运势：\n{data['fortunetext']['work']}\n\n"
+                        f"💰 财运分析：\n{data['fortunetext']['money']}\n\n"
+                        f"🌿 健康建议：\n{data['fortunetext']['health']}"
                     )
-                    logger.debug(f"星座运势数据: {constellation_text}")
                     return constellation_text
                 else:
-                    err_str = f"API返回错误: {response_data.get('message', '未知错误')}"
-                    logger.error(err_str)
-                    return err_str
+                    return f"API返回错误: {response_data.get('message', '未知错误')}"
 
         except aiohttp.ClientError as e:
-            err_str = f"网络请求错误: {str(e)}"
-            logger.error(err_str)
-            return err_str
+            return f"网络请求错误: {str(e)}"
         except Exception as err:
-            err_str = f"处理错误: {str(err)}"
-            logger.error(err_str)
-            return err_str
+            return f"处理错误: {str(err)}"
 
     @filter.event_message_type(filter.EventMessageType.ALL)
     async def handle_constellation(self, event: AstrMessageEvent):
-        """处理星座运势请求"""
+        """处理星座运势请求（完整模式）"""
         content = event.message_str.strip()
 
         if self.constellation_check_keyword(content):
-            logger.debug(f"[星座插件] 收到请求: {content}")
+            logger.info(f"[星座插件] 收到请求: {content}")
 
             if content in self.ZODIAC_MAPPING:
                 zodiac_english = self.ZODIAC_MAPPING[content]
@@ -103,5 +98,5 @@ class ConstellationPlugin(Star):
             else:
                 yield event.plain_result("暂不支持该星座查询，请输入正确的星座名称如'白羊座'")
 
-            # 中断事件处理流程
-            event.stop_event()  # 停止事件传播，防止其他插件处理相同消息
+            # 停止事件传播
+            event.stop_event()
