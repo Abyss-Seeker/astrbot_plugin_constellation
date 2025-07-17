@@ -49,7 +49,7 @@ class ConstellationPlugin(Star):
                 logger.info("Response data await success")
                 logger.info(response_data['data'])
 
-                if response_data.get("success"):
+                if response_data.get("code") == 200:
                     data = response_data['data']
                     # 构建完整的星座运势信息（包含所有字段）
                     constellation_text = (
