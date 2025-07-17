@@ -9,7 +9,7 @@ from astrbot.api import logger
 class ConstellationPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
-        self.CONSTELLATION_URL = "https://api.vvhan.com/api/horoscope"
+        self.CONSTELLATION_URL = "https://v2.xxapi.cn/api/horoscope"
         self.session = aiohttp.ClientSession()
         self.ZODIAC_MAPPING = {
             '白羊座': 'aries',
