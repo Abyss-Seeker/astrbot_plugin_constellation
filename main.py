@@ -46,6 +46,7 @@ class ConstellationPlugin(Star):
                     return f"API请求失败: HTTP {response.status}"
 
                 response_data = await response.json()
+                logger.debug(response_data['data'])
 
                 if response_data.get("success"):
                     data = response_data['data']
